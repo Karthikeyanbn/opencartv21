@@ -1,0 +1,95 @@
+package utilities;
+
+import java.io.File;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.List;
+
+import org.testng.ITestContext;
+import org.testng.ITestListener;
+import org.testng.ITestResult;
+
+import com.aventstack.extentreports.ExtentReports;
+import com.aventstack.extentreports.ExtentTest;
+import com.aventstack.extentreports.Status;
+import com.aventstack.extentreports.reporter.ExtentSparkReporter;
+import com.aventstack.extentreports.reporter.configuration.Theme;
+import testBase.BaseClass;
+
+public class ExtendReport implements ITestListener {
+	
+	public ExtentSparkReporter reporter;
+	public ExtentReports extent;
+	public ExtentTest test;
+	
+	String repname;
+	
+	public void onStart(ITestContext context) {
+		
+		SimpleDateFormat df=new SimpleDateFormat("yyyy.MM.dd.HH.mm.ss");
+		Date dt=new Date();
+		String timeStamp=df.format(dt);
+		repname="Test Report-"+timeStamp+".html";
+		reporter=new ExtentSparkReporter(".\\Reports\\"+repname);
+		reporter.config().setDocumentTitle("opencartautomation");
+		reporter.config().setReportName("Open cart testing");
+		reporter.config().setTheme(Theme.DARK);
+		
+		extent=new ExtentReports();
+		extent.attachReporter(reporter);
+		extent.setSystemInfo("Application", "opencart");
+		extent.setSystemInfo("module", "user");
+		extent.setSystemInfo("User Name", System.getProperty("user.name"));
+		extent.setSystemInfo("Enviroment", "QA");
+		
+		String os=context.getCurrentXmlTest().getParameter("os");
+		extent.setSystemInfo("operating system", os);
+		
+		String browser=context.getCurrentXmlTest().getParameter("browser");
+		extent.setSystemInfo("window",browser);
+		
+		List<String>IncludeGroups=context.getCurrentXmlTest().getIncludedGroups();
+		if (!IncludeGroups.isEmpty()) {
+			extent.setSystemInfo("groups", IncludeGroups.toString());
+			
+		}
+		
+	}
+	
+	public  void onTestSuccess(ITestResult result) {
+	test=extent.createTest(result.getTestClass().getName());
+	test.assignAuthor(result.getMethod().getGroups());
+	test.log(Status.PASS,"got Sucessfully done:"+ result.getName());
+	}
+	
+	public void onTestFailure(ITestResult result) {
+		test=extent.createTest(result.getTestClass().getName());
+		test.assignAuthor(result.getMethod().getGroups());
+		test.log(Status.FAIL, "got failed:"+result.getName());
+		test.log(Status.INFO, result.getThrowable().getMessage());
+		
+		try {
+		String imgPath = new BaseClass().captureScreen(result.getName());
+		test.addScreenCaptureFromPath(imgPath);
+		}
+		catch(Exception e) {
+			e.printStackTrace();
+			
+		}
+	}
+	public void onTestSkipped(ITestResult result) {
+		test=extent.createTest(result.getTestClass().getName());
+		test.assignAuthor(result.getMethod().getGroups());
+		test.log(Status.SKIP, "test is skipped:"+result.getName());
+		test.log(Status.SKIP, result.getThrowable().getMessage());
+	}
+	
+	public void onFinish(ITestResult result) {
+		extent.flush();
+		String pathOfReport=System.getProperty("user.dir")+"\\Reports\\"+repname;
+		File extend=new File(pathOfReport);
+	}
+	
+	}
+
+

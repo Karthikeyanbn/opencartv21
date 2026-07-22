@@ -1,0 +1,54 @@
+package testCase;
+
+
+import org.testng.Assert;
+import org.testng.annotations.Test;
+
+
+import pageObject.Homepage;
+import pageObject.Registration;
+import testBase.BaseClass;
+
+public class AccountRegisteration extends BaseClass {
+
+	@Test(groups= {"Sanity","Rehression"})
+	public void accountregistration() throws InterruptedException {
+		
+	logger.info("Starting the account registration");
+	try {
+		Homepage hp=new Homepage(driver);
+		hp.clickonaccount();
+		logger.info("Account is clicked");
+		hp.clickoregister();
+		logger.info("click the registration");
+		
+		Registration re=new Registration(driver);
+		
+		logger.info("customer details");
+		re.FirstName(randomString().toUpperCase());
+		re.LastName(randomString().toUpperCase());
+		re.Email(randomString()+"@gmail.com");
+		re.Phone(randomNumber());
+		
+		String Password = randomAlphaNumeric();
+		re.Password(Password);
+		re.ConfirmPassword(Password);
+		re.terms();
+		re.Continue();
+		
+		logger.info("check the confirmation message");
+		String Cinfirmmessage=re.Message();
+		Assert.assertEquals(Cinfirmmessage, "h1");
+		logger.info("test passed");
+	}
+	catch(Exception e) {
+		
+		logger.error("test failed:"+ e.getMessage() );
+		logger.debug("test failed:"+e.getMessage());
+	}
+	logger.info("test completed for registration");
+	}
+
+
+
+}
